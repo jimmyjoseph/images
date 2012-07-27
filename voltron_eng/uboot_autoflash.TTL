@@ -1,0 +1,55 @@
+;;  Title of the Tera Term Window
+StrWindowTitle  = 'OMAP44xx MPA3.0 Auto Flash'
+StrCaption      = 'Motorola Solution Voltron Test Automation Demo'
+
+;;  The u-boot message to stop autoboot.
+MsgAutoboot     = 'Hit any key to stop autoboot:'
+;;MsgAutoboot     = '}}}' 
+;;  The u-boot prompt
+PromptUboot     = 'OMAP44XX MPA3.0 #'
+PromptFastboot  = 'Fastboot entered'
+
+;;  Open and Connect Tera Term on COM12 command line = 'TERATERM /C=12'
+connect '/C=12'
+
+;;  Set position of status dialog box
+setdlgpos 10 10
+
+;;  Set window title
+settitle StrWindowTitle
+
+;; wait for autoboot prompt, sned any key e.g. d
+wait MsgAutoboot
+sendln 'd'
+
+wait PromptUboot
+sendln 'mmcinit 1'
+
+wait PromptUboot
+sendln 'mmc 1 checkslc'
+
+wait 'MLC' 'SLC'
+;; if MLC, then perform mlc2slc conversion; 
+if result = 1 then
+; wait PromptUboot
+sendln 'mmc 1 mlc2slc'
+
+;; Popup a message box to operator to power OFF/ON
+title="Manual Action"
+message="Power cycle the target board.\n"
+strspecial message
+messagebox message title
+
+;; wait after power OFF/ON
+wait MsgAutoboot
+sendln 'd'
+endif
+
+;;  wait for u-boot command prompt, then enter fastboot mode
+wait PromptUboot
+sendln 'fastboot'
+
+;; Launch a batch file.
+wait PromptFastboot
+exec 'cmd /c voltron_flash.bat '
+
